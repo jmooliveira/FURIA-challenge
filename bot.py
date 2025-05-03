@@ -12,6 +12,8 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 # Estados do cadastro
 NOME, EMAIL = range(2)
 
+QUIZ = 0
+
 # Comandos do menu
 def start(update: Update, context: CallbackContext):
     menu = [["/ultimojogo", "/proximojogo"],
@@ -72,8 +74,32 @@ def sair(update: Update, context: CallbackContext):
         reply_markup=ReplyKeyboardMarkup([["/start"]], resize_keyboard=True)
     )
 
+def quiz(update: Update, context: CallbackContext):
+    pergunta = "🤔 Quem é o capitão atual do time de CS:GO da FURIA?"
+    opcoes = ["A) yuurih", "B) chelo", "C) FalleN", "D) KSCERATO"]
+    resposta_correta = "C"
+    context.user_data["resposta_quiz"] = resposta_correta
+
+    texto = f"{pergunta}\n\n" + "\n".join(opcoes)
+    update.message.reply_text(texto)
+    return QUIZ
+
+def verificar_resposta(update: Update, context: CallbackContext):
+    resposta = update.message.text.strip().upper()
+    resposta_certa = context.user_data.get("resposta_quiz")
+
+    if resposta_certa:
+        if resposta == resposta_certa:
+            update.message.reply_text("✅ Correto! FalleN é o capitão atual.\n+1 ponto para você!")
+        else:
+            update.message.reply_text(f"❌ Resposta incorreta! A correta era: {resposta_certa})")
+        del context.user_data["resposta_quiz"]  # limpa a sessão do quiz
+    return ConversationHandler.END
+
 # Main
 def main():
+    print("🛠 Rodando versão atualizada do código!")
+
     updater = Updater(BOT_TOKEN, use_context=True)
     dp = updater.dispatcher
 
@@ -86,6 +112,16 @@ def main():
     dp.add_handler(CommandHandler("loja", loja))
     dp.add_handler(CommandHandler("menu", start))
     dp.add_handler(CommandHandler("sair", sair))
+
+    # Coloque aqui, após a definição da função quiz()
+    quiz_handler = ConversationHandler(
+        entry_points=[CommandHandler("quiz", quiz)],
+        states={
+            QUIZ: [MessageHandler(Filters.text & ~Filters.command, verificar_resposta)],
+        },
+        fallbacks=[CommandHandler("cancelar", cancelar)],
+    )
+    dp.add_handler(quiz_handler)
 
     cadastro_handler = ConversationHandler(
         entry_points=[CommandHandler("cadastro", iniciar_cadastro)],
