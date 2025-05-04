@@ -92,7 +92,6 @@ def quiz(update: Update, context: CallbackContext):
     opcoes = ["A) yuurih", "B) chelo", "C) FalleN", "D) KSCERATO"]
     resposta_correta = "C"
     context.user_data["resposta_quiz"] = resposta_correta
-
     texto = f"{pergunta}\n\n" + "\n".join(opcoes)
     update.message.reply_text(texto)
     return QUIZ
@@ -101,7 +100,6 @@ def quiz(update: Update, context: CallbackContext):
 def verificar_resposta(update: Update, context: CallbackContext):
     resposta = update.message.text.strip().upper()
     resposta_certa = context.user_data.get("resposta_quiz")
-
     if resposta_certa:
         if resposta == resposta_certa:
             update.message.reply_text("✅ Correto! FalleN é o capitão atual.\n+1 ponto para você!")
